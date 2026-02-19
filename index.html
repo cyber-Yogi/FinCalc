@@ -46,31 +46,44 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <script>
-    // 1. YOUR CSV LINK GOES HERE
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQ53qpxLKc_IIHcFEZAJTKfxHF0JvqKHUylAUojLpXgmMoXbHwrjFZOW8Ckz4TGnp33-5AHkvtH01_/pub?gid=390813347&single=true&output=csv';
 
-    function loadData() {
+    function loadBibleData() {
         Papa.parse(csvUrl, {
             download: true,
             header: true,
+            skipEmptyLines: true,
             complete: function(results) {
-                const data = results.data[0];
+                const row = results.data[0];
                 
-                // Update the numbers
-                document.getElementById('net-worth').innerText = "£" + Number(data.NetWorth).toLocaleString();
-                document.getElementById('sipp').innerText      = "£" + Number(data.SIPP).toLocaleString();
-                document.getElementById('cash').innerText      = "£" + Number(data.Cash).toLocaleString();
-                document.getElementById('gold').innerText      = "£" + Number(data.Gold).toLocaleString();
+                // Safety function to clean numbers and handle #REF! or errors
+                const clean = (val) => {
+                    if (!val || val.includes('#') || val === '-') return "0";
+                    let n = val.replace(/[£,]/g, '');
+                    return Number(n).toLocaleString(undefined, {maximumFractionDigits: 0});
+                };
+
+                // Update the Dashboard (Matching your specific headers)
+                document.getElementById('net-worth').innerText = "£" + clean(row.NetWorth);
+                document.getElementById('sipp').innerText      = "£" + clean(row.SIPP);
+                document.getElementById('cash').innerText      = "£" + clean(row.Cash);
+                document.getElementById('gold').innerText      = "£" + clean(row.Gold);
                 
-                // Update footer
-                document.getElementById('sync-time').innerText = "Last Bible Sync: " + data.LastSync;
+                // Add Mortgage if you have a spot for it, otherwise this just cleans it
+                const mortgageVal = clean(row.Mortgage);
+
+                // Update Sync Time
+                document.getElementById('sync-time').innerText = "Last Bible Sync: " + row.LastSync;
                 document.getElementById('loading').style.display = 'none';
+                
+                console.log("Data successfully synced at " + row.LastSync);
             }
         });
     }
-
-    loadData();
+    loadBibleData();
 </script>
+   
 </body>
 </html>
